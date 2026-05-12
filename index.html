@@ -616,27 +616,42 @@ function barChart(canvasId,labels,digData,tradData,color){
 }
 
 function lineChart(canvasId){
+  const e=currentEntity;
   const labels=['1–30','31–60','61–90','91–120'];
   const keys=['1-30','31-60','61-90','91-120'];
-  const getEf=(e,k)=>{const r=DATA[e][k];if(!r)return null;const s=r.total||r;return s.efectividad?.digital!=null?+(s.efectividad.digital*100).toFixed(2):null;};
+  const getEf=(k,canal)=>{
+    const r=DATA[e][k]; if(!r)return null;
+    const s=r.total||r;
+    const v=canal==='digital'?s.efectividad?.digital:s.efectividad?.trad;
+    return v!=null?+(v*100).toFixed(2):null;
+  };
+  const isBCP=e==='bcp';
+  const colorDig =isBCP?'#1a5fd4':'#e0500a';
+  const colorTrad=isBCP?'#93b4f0':'#f4a97a';
+  const bgDig    =isBCP?'rgba(26,95,212,0.07)':'rgba(224,80,10,0.07)';
+  const labelDig =isBCP?'BCP · Digital':'Yape · Digital';
+  const labelTrad=isBCP?'BCP · Tradicional':'Yape · Tradicional';
   const ctx=document.getElementById(canvasId)?.getContext('2d'); if(!ctx)return;
   const c=new Chart(ctx,{type:'line',data:{labels,datasets:[
-    {label:'BCP · Digital', data:keys.map(k=>getEf('bcp',k)), borderColor:'#1a5fd4',backgroundColor:'rgba(26,95,212,0.07)',borderWidth:2.5,pointBackgroundColor:'#1a5fd4',pointRadius:4,pointHoverRadius:6,fill:true,tension:0.35},
-    {label:'Yape · Digital',data:keys.map(k=>getEf('yape',k)),borderColor:'#e0500a',backgroundColor:'rgba(224,80,10,0.06)',borderWidth:2.5,pointBackgroundColor:'#e0500a',pointRadius:4,pointHoverRadius:6,fill:true,tension:0.35,borderDash:[5,3]}
-  ]},options:{responsive:true,maintainAspectRatio:true,aspectRatio:1.8,plugins:{
-    legend:{labels:{font:{family:CF,size:11,weight:'600'},color:'#374151',boxWidth:10,usePointStyle:true,pointStyle:'circle'}},
-    tooltip:{backgroundColor:'#fff',titleColor:'#111827',bodyColor:'#374151',borderColor:'#e2e7ef',borderWidth:1,padding:9,titleFont:{family:CF,size:12,weight:'700'},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1)+'%':'N/D'}`}}
-  },scales:{
-    x:{grid:{display:false},ticks:{font:{family:CF,size:11,weight:'600'},color:'#374151'}},
-    y:{grid:{color:'#f0f2f5'},ticks:{font:{family:'JetBrains Mono',size:10},color:'#6b7280',callback:v=>v+'%'},border:{dash:[4,4]}}
-  }}});
+    {label:labelDig,  data:keys.map(k=>getEf(k,'digital')), borderColor:colorDig,  backgroundColor:bgDig,        borderWidth:2.5, pointBackgroundColor:colorDig,  pointStyle:'circle',  pointRadius:4, pointHoverRadius:7, fill:true,  tension:0.35},
+    {label:labelTrad, data:keys.map(k=>getEf(k,'trad')),    borderColor:colorTrad, backgroundColor:'transparent', borderWidth:2,   pointBackgroundColor:colorTrad, pointStyle:'rectRot', pointRadius:4, pointHoverRadius:7, fill:false, tension:0.35, borderDash:[6,3]}
+  ]},options:{responsive:true,maintainAspectRatio:true,aspectRatio:1.8,
+    plugins:{
+      legend:{position:'bottom',labels:{font:{family:CF,size:11,weight:'600'},color:'#374151',boxWidth:10,boxHeight:2,padding:14,usePointStyle:true}},
+      tooltip:{backgroundColor:'#fff',titleColor:'#111827',bodyColor:'#374151',borderColor:'#e2e7ef',borderWidth:1,padding:10,titleFont:{family:CF,size:12,weight:'700'},bodyFont:{family:'JetBrains Mono',size:11},callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1)+'%':'N/D'}`}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{family:CF,size:11,weight:'600'},color:'#374151'}},
+      y:{grid:{color:'#f0f2f5'},ticks:{font:{family:'JetBrains Mono',size:10},color:'#6b7280',callback:v=>v+'%'},border:{dash:[4,4]}}
+    }
+  }});
   chartInstances.push(c);
 }
 
 function chartsRow(id1,title1,sub1,id2){
   return `<div class="charts-row animate animate-3">
     <div class="chart-card"><div class="chart-title">${title1}</div><div class="chart-sub">${sub1}</div><canvas id="${id1}" height="140"></canvas></div>
-    <div class="chart-card"><div class="chart-title">Tendencia · BCP vs Yape</div><div class="chart-sub">Efectividad digital por tramo 1–120</div><canvas id="${id2}" height="140"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Tendencia · Dig vs Trad</div><div class="chart-sub">BCP y Yape · Digital vs Tradicional por tramo</div><canvas id="${id2}" height="160"></canvas></div>
   </div>`;
 }
 
